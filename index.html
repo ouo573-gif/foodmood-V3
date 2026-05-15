@@ -1,0 +1,1276 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>食緒曆 FoodMood</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Serif+TC:wght@400;700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            jade:      '#95d3c3',
+            ink:       '#2C2623',
+            clay:      '#C04A3B',
+            crimson:   '#85291b',
+            sand:      '#c8b88a',
+            amber:     '#D98A5B',
+            forest:    '#4A6B5D',
+            muted:     '#877B73',
+            parchment: '#F4EFE6',
+            stroke:    '#EAE4D9',
+            paper:     '#FAF8F5',
+            night:     '#1b1200',
+            cream:     '#f5e0bb',
+            mist:      '#a8c5bf',
+            blush:     '#ffb4a7',
+            deep:      '#120c00',
+          },
+          fontFamily: {
+            sans: ['Inter','Noto Sans TC','ui-sans-serif','system-ui','sans-serif'],
+            serif: ['Noto Serif TC','serif'],
+            mono: ['JetBrains Mono','ui-monospace','SFMono-Regular','monospace'],
+          },
+          boxShadow: { card: '0 8px 30px rgba(135,123,115,0.08)' }
+        }
+      }
+    }
+  </script>
+  <style>
+    :root {
+      --jade:     #95d3c3;
+      --ink:      #2C2623;
+      --clay:     #C04A3B;
+      --crimson:  #85291b;
+      --sand:     #c8b88a;
+      --amber:    #D98A5B;
+      --forest:   #4A6B5D;
+      --muted:    #877B73;
+      --parchment:#F4EFE6;
+      --stroke:   #EAE4D9;
+      --paper:    #FAF8F5;
+      --night:    #1b1200;
+      --cream:    #f5e0bb;
+      --mist:     #a8c5bf;
+      --blush:    #ffb4a7;
+      --deep:     #120c00;
+      --r:        5px;
+    }
+    body { background-color: var(--night); color: var(--cream); font-family: 'Noto Serif TC', serif; }
+    ::selection { background-color: var(--clay); color: white; }
+    .paper-texture {
+      background-image: radial-gradient(#877B73 0.5px, transparent 0.5px);
+      background-size: 24px 24px;
+      opacity: 0.05;
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+    .seal {
+      display: inline-block;
+      border: 2px solid var(--clay);
+      color: var(--clay);
+      padding: 2px 4px;
+      font-size: 10px;
+      font-weight: 900;
+      transform: rotate(-8deg);
+      margin-left: 8px;
+      border-radius: 2px;
+      font-family: 'Noto Serif TC', serif;
+      text-transform: uppercase;
+      letter-spacing: -0.05em;
+    }
+    .scrollbar-hide::-webkit-scrollbar { display: none; }
+    .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spin-slow { animation: spin 15s linear infinite; border-top: 4px solid var(--clay); border-radius: 9999px; position: absolute; inset: 0; opacity: 0.6; }
+    .spin-loading { animation: spin 2s linear infinite; display: inline-block; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
+    .animate-pulse { animation: pulse 2s cubic-bezier(0.4,0,0.6,1) infinite; }
+    @keyframes fadeSlideIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+    .fade-in { animation: fadeSlideIn 0.3s ease-out; }
+    @keyframes onboardFadeIn { from{opacity:0} to{opacity:1} }
+    .onboard-in { animation: onboardFadeIn 1s ease-out; }
+    @keyframes onboardSlideUp { from{opacity:0;transform:translateY(40px)} to{opacity:1;transform:translateY(0)} }
+    .onboard-text-in { animation: onboardSlideUp 0.8s ease-out 0.5s both; }
+    .onboard-btn-in { animation: onboardSlideUp 0.8s ease-out 0.9s both; }
+    @keyframes floatGlow { 0%,100%{transform:translateY(0);filter:brightness(1)} 50%{transform:translateY(-6px);filter:brightness(1.2)} }
+    .float-glow { animation: floatGlow 3s ease-in-out infinite; }
+    @keyframes fadeOut { from{opacity:1} to{opacity:0} }
+    .fade-out { animation: fadeOut 0.6s ease-out forwards; }
+    @keyframes modalSlideUp { from{opacity:0;transform:translateY(30px) scale(0.95)} to{opacity:1;transform:translateY(0) scale(1)} }
+    .modal-up { animation: modalSlideUp 0.35s cubic-bezier(0.34,1.56,0.64,1); }
+    @keyframes sheetSlideUp { from{opacity:0;transform:translateY(100%)} to{opacity:1;transform:translateY(0)} }
+    .sheet-up { animation: sheetSlideUp 0.35s cubic-bezier(0.34,1.56,0.64,1); }
+    @keyframes progressBar { from{width:0} to{width:20%} }
+    .progress-bar { animation: progressBar 1s ease-out forwards; }
+    .hover-scale { transition: transform 0.2s; }
+    .hover-scale:hover { transform: scale(1.02); }
+    .hover-scale:active { transform: scale(0.98); }
+  </style>
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useMemo, useEffect } = React;
+
+    // ── Gemini API Key (填入你的 key 即可啟用 AI 解籤) ──
+    const GEMINI_API_KEY = '';
+
+    // ── Constants ──
+    const MBEI_TYPES = {
+      MNHR: { code:'MNHR', name:'玄武 (The Guardian)', creature:'玄武', description:'心理修復 × 原型食物 × 沉重 × 規律', insight:'沉穩之神。規律攝取厚重的原野肉食，體質堅實，氣場厚重。', emoji:'🐢' },
+      MNHV: { code:'MNHV', name:'麒麟 (The Sacred Beast)', creature:'麒麟', description:'心理修復 × 原型食物 × 沉重 × 飄忽', insight:'仁寵之獸。隨性攝取豐盛的原型珍饈，雖然負擔較重，但帶有療癒之光。', emoji:'🦒' },
+      MNLR: { code:'MNLR', name:'白澤 (The Wise Seer)', creature:'白澤', description:'心理修復 × 原型食物 × 輕盈 × 規律', insight:'辟邪之獸。準時攝取清淡的原野精華，神魂清澈，最懂平衡之道。', emoji:'🦄' },
+      MNLV: { code:'MNLV', name:'九尾 (The Spirit Fox)', creature:'九尾', description:'心理修復 × 原型食物 × 輕盈 × 飄忽', insight:'幻化之靈。隨性攝取自然花果，身輕如雲，性格飄忽難測。', emoji:'🦊' },
+      MPHR: { code:'MPHR', name:'金烏 (The Sun-Bird)', creature:'金烏', description:'心理修復 × 加工食品 × 沉重 × 規律', insight:'司日之靈。規律攝取濃縮火精（加工甜食），雖循天時，但體內積聚過量陽煞。', emoji:'🦅' },
+      MPHV: { code:'MPHV', name:'饕餮 (The Devourer)', creature:'饕餮', description:'心理修復 × 加工食品 × 沉重 × 飄忽', insight:'貪食之獸。在心神不寧時攝取大量人工煉化物，濁氣（煞）極重，出沒無常。', emoji:'👺' },
+      MPLR: { code:'MPLR', name:'織女 (The Weaver)', creature:'織女', description:'心理修復 × 加工食品 × 輕盈 × 規律', insight:'巧手之神。規律攝取精緻但輕盈的人造膳食，維持神力的細膩穩定。', emoji:'🧵' },
+      MPLV: { code:'MPLV', name:'夢貘 (The Dream Eater)', creature:'夢貘', description:'心理修復 × 加工食品 × 輕盈 × 飄忽', insight:'食夢之獸。不定期攝取人工輕量代餐，游離於虛實與情緒之間。', emoji:'🐘' },
+      PNHR: { code:'PNHR', name:'當康 (The Harvest Boar)', creature:'當康', description:'生理功能 × 原型食物 × 沉重 × 規律', insight:'瑞獸。規律攝取紮實的原型糧食，身體強健且負擔感重，象徵豐饒。', emoji:'🐗' },
+      PNHV: { code:'PNHV', name:'朱厭 (The War Omen)', creature:'朱厭', description:'生理功能 × 原型食物 × 沉重 × 飄忽', insight:'猿身紅腳。隨性攝取大量原型蛋白質，力量強大但體內火煞過旺。', emoji:'🐒' },
+      PNLR: { code:'PNLR', name:'夔 (The Thunder Beast)', creature:'夔', description:'生理功能 × 原型食物 × 輕盈 × 規律', insight:'獨足之牛。堅守原野清淡之食，順應天時，氣息強大但性格孤冷。', emoji:'🐃' },
+      PNLV: { code:'PNLV', name:'夫諸 (The Water Deer)', creature:'夫諸', description:'生理功能 × 原型食物 × 輕盈 × 飄忽', insight:'四角之鹿。隨性攝取山泉草木，體質極度清透，性情隨遇而安。', emoji:'🦌' },
+      PPHR: { code:'PPHR', name:'混沌 (The Primal Chaos)', creature:'混沌', description:'生理功能 × 加工食品 × 沉重 × 規律', insight:'無竅之獸。規律攝取沉重澱粉，雖然進食有時，但肉身混濁，難以代謝。', emoji:'🌀' },
+      PPHV: { code:'PPHV', name:'魃 (The Drought Bringer)', creature:'魃', description:'生理功能 × 加工食品 × 沉重 × 飄忽', insight:'旱之妖。攝取過多人工焦灼物（乾糧），體內水分枯竭，濁氣淤塞，節奏紊亂。', emoji:'🏜️' },
+      PPLR: { code:'PPLR', name:'精衛 (The Persistent Bird)', creature:'精衛', description:'生理功能 × 加工食品 × 輕盈 × 規律', insight:'銜石之鳥。為了達成生存目標，規律攝取極低負擔的煉化補給，堅毅且枯燥。', emoji:'🐦' },
+      PPLV: { code:'PPLV', name:'影 (The Shadow Runner)', creature:'影', description:'生理功能 × 加工食品 × 輕盈 × 飄忽', insight:'隨風之魅。隨性攝取加工輕食，生存優先，沒有定性，存在感薄弱。', emoji:'👤' },
+    };
+
+    const CREATURE_IMG = {
+      MNHR:'openspec/asset/png/7.png',  MNHV:'openspec/asset/png/8.png',
+      MNLR:'openspec/asset/png/3.png',  MNLV:'openspec/asset/png/4.png',
+      MPHR:'openspec/asset/png/2.png',  MPHV:'openspec/asset/png/1.png',
+      MPLR:'openspec/asset/png/5.png',  MPLV:'openspec/asset/png/6.png',
+      PNHR:'openspec/asset/png/11.png', PNHV:'openspec/asset/png/13.png',
+      PNLR:'openspec/asset/png/12.png', PNLV:'openspec/asset/png/15.png',
+      PPHR:'openspec/asset/png/16.png', PPHV:'openspec/asset/png/10.png',
+      PPLR:'openspec/asset/png/14.png', PPLV:'openspec/asset/png/9.png',
+    };
+
+    const BODY_FEELING_OPTIONS = [
+      { label:'清爽', emoji:'🍃' }, { label:'飽足', emoji:'🥣' }, { label:'胃脹', emoji:'🎈' },
+      { label:'心悸', emoji:'💓' }, { label:'想睡', emoji:'🛌' }, { label:'口渴', emoji:'🥤' },
+    ];
+
+    const FORTUNES = [
+      { id:'f1', title:'業障初現，警示之兆', verse:['精製加工堆積體脂','動物油脂纏繞血管','纖維雖在難以抵擋','轉運需從明日做起'], advice:['宜 飯後步行20分鐘','晚餐選清蒸食物','補充膳食纖維'], fortuneType:'warning' },
+      { id:'f2', title:'法脈圓通，修行之時', verse:['清淡蔬食滋養神魂','五穀雜糧穩固根基','不假外求身心自如','福報已在腸胃之間'], advice:['宜 持續今日餐單','多飲溫潤山泉','靜坐片刻安神'], fortuneType:'blessing' },
+      { id:'f3', title:'情執深重，心緒之結', verse:['以食止痛愁上加愁','甜膩入口百苦不解','胃納雖滿心神仍缺','暫歇外物尋回本心'], advice:['宜 遠離電子訊號','忌 深夜情緒進食','補充優質蛋白'], fortuneType:'warning' },
+      { id:'f4', title:'天時有序，節律之美', verse:['準時進食陰陽平衡','不躁不急脾胃悠歸','日常點滴皆是修行','長此以往百病不侵'], advice:['宜 睡覺前四小時禁食','忌 暴飲暴食','早起飲一杯暖水'], fortuneType:'blessing' },
+      { id:'f5', title:'燥火上升，急功近利', verse:['重口油膩灼燒內府','雖得瞬息感官之愉','難換久長生理之安','此乃透支身體之兆'], advice:['宜 搭配涼性蔬果','忌 辛辣刺激','飲用微溫淡茶'], fortuneType:'warning' },
+      { id:'f6', title:'氣形合一，神清氣爽', verse:['輕盈入口通達經絡','不偏不倚適可而止','今日所食皆為良藥','行住坐臥自在無礙'], advice:['宜 維持目前頻率','宜 分享快樂食緒','深呼吸納入真氣'], fortuneType:'blessing' },
+      { id:'f7', title:'陰霾未散，空洞之困', verse:['求不得中執著外象','味同嚼蠟神魂缺位','此餐非食乃是抗爭','接受脆弱方得圓滿'], advice:['宜 尋找摯友傾訴','忌 獨自進食宵夜','聽清香古琴之音'], fortuneType:'warning' },
+      { id:'f8', title:'繁瑣過境，簡約之道', verse:['雜亂無度損耗元神','速成之物缺法自然','向內觀照簡化日常','自有一番天地氣量'], advice:['宜 簡化料理流程','宜 慢速細嚼三十下','忌 狼吞虎嚥'], fortuneType:'normal' },
+    ];
+
+    const LEADERBOARD_DATA = [
+      { rank:1, name:'玄武大師', points:4520, code:'MNHR' },
+      { rank:2, name:'九尾仙人', points:3880, code:'MNLV' },
+      { rank:3, name:'鳳皇傳人', points:3150, code:'MPHR' },
+      { rank:4, name:'白澤行者', points:2890, code:'MNLR' },
+      { rank:5, name:'麒麟之友', points:2460, code:'MNHV' },
+    ];
+
+    // ── Utils ──
+    const cn = (...classes) => classes.filter(Boolean).join(' ');
+    const ACTIVE_USER_KEY = 'foodmood_active_user';
+    const PROFILES_KEY = 'foodmood_profiles';
+    const normalizeEmail = (email) => email.trim().toLowerCase();
+    const loadProfiles = () => { try { const r = localStorage.getItem(PROFILES_KEY); return r ? JSON.parse(r) : {}; } catch { return {}; } };
+    const saveProfiles = (p) => localStorage.setItem(PROFILES_KEY, JSON.stringify(p));
+
+    // ── Gemini Service ──
+    const getMockFortune = (recordData) => {
+      const mood = recordData?.mood || '平靜';
+      const food = recordData?.foodEmoji || '這一餐';
+      const context = recordData?.context || '日常';
+      const bodyFeeling = recordData?.bodyFeeling || '尚可';
+      const isHeavy = ['焦慮','煩躁','空虛','後悔'].includes(mood);
+      const isRepair = ['被安撫','滿足','平靜','有精神'].includes(mood);
+      return {
+        id: `mock-${Date.now()}`,
+        title: isHeavy ? `夜火未熄，${food}暫鎮心潮` : isRepair ? `${food}入腹，微光歸位` : '肉香鎮魂，麵線續命',
+        verse: [`${food}為舟，載你過潮`, `${context}之下，胃先應劫`, `${mood}未必是錯，只是太晚`, `${bodyFeeling}有聲，明日宜和`],
+        advice: [
+          isHeavy ? '宜：先補溫水，再慢慢吃完' : '宜：維持節奏，七分飽即可',
+          isHeavy ? '忌：邊焦慮邊續杯咖啡' : '忌：吃完立刻久坐不動',
+          `解讀：你吃的不是單一食物，而是當下想被接住的感受。關鍵詞：${food}・${mood}・${context}`
+        ],
+        fortuneType: isHeavy ? 'warning' : isRepair ? 'blessing' : 'normal'
+      };
+    };
+
+    const generateAIFortune = async (recordData) => {
+      if (!GEMINI_API_KEY) return getMockFortune(recordData);
+      const { mealType, foodType, mood, bodyFeeling, context, foodEmoji } = recordData;
+      const prompt = `你是「食緒解籤」AI。請根據使用者輸入的食物與情境做動態分析。輸入：食物/情境=${foodEmoji}，餐別=${mealType}，餐後心情=${mood}，身體感受=${bodyFeeling}，當下情境=${context}。請輸出 JSON，包含：title(string), verse(4個string的array), advice(3個string的array), fortuneType("warning"|"normal"|"blessing")。國風但現代風格，溫柔且有一點黑色幽默。只輸出JSON。`;
+      try {
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ contents:[{ parts:[{ text: prompt }] }], generationConfig:{ responseMimeType:'application/json' } })
+        });
+        const data = await res.json();
+        const parsed = JSON.parse(data.candidates[0].content.parts[0].text);
+        return { id:`ai-${Date.now()}`, ...parsed };
+      } catch (e) {
+        console.error('Gemini error:', e);
+        return getMockFortune(recordData);
+      }
+    };
+
+    // ── SVG Icons ──
+    const HomeIcon = ({ size=20 }) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>;
+    const CalendarIcon = ({ size=20 }) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>;
+    const PlusIcon = ({ size=20 }) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>;
+    const BarChartIcon = ({ size=20 }) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" x2="18" y1="20" y2="10"/><line x1="12" x2="12" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="14"/></svg>;
+    const UserIcon = ({ size=20 }) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>;
+    const XIcon = ({ size=20 }) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>;
+    const ChevronRightIcon = ({ size=14 }) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>;
+    const InfoIcon = ({ size=20 }) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>;
+    const AwardIcon = ({ size=20 }) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>;
+    const ZapIcon = ({ size=18 }) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>;
+    const CoffeeIcon = ({ size=12 }) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/><line x1="6" x2="6" y1="2" y2="4"/><line x1="10" x2="10" y1="2" y2="4"/><line x1="14" x2="14" y1="2" y2="4"/></svg>;
+
+    // ── Small shared components ──
+    function SidebarButton({ icon: Icon, label, active, onClick }) {
+      return (
+        <button onClick={onClick} className={cn("w-full flex items-center gap-4 px-6 py-4 rounded-xl transition-all duration-300 group", active ? "bg-ink text-white shadow-lg" : "text-muted hover:bg-parchment hover:text-ink")}>
+          <Icon size={22} className={cn("transition-transform group-hover:scale-110", active ? "text-clay" : "")} />
+          <span className="font-bold tracking-tight">{label}</span>
+          {active && <div className="ml-auto w-1.5 h-1.5 bg-clay rounded-full" />}
+        </button>
+      );
+    }
+
+    function TabButton({ icon: Icon, label, active, onClick, dark }) {
+      return (
+        <button onClick={onClick} className="flex flex-col items-center gap-1 transition-all">
+          <Icon size={20} className={active ? "text-clay" : (dark ? "text-white/60" : "text-muted")} />
+          <span className={cn("text-[9px] font-bold uppercase tracking-widest", active ? "text-clay" : (dark ? "text-white/40" : "text-muted"))}>{label}</span>
+        </button>
+      );
+    }
+
+    function PillSelector({ options, value, onChange }) {
+      return (
+        <div className="flex flex-wrap gap-2">
+          {options.map(opt => {
+            const label = typeof opt === 'string' ? opt : opt.label;
+            const val = typeof opt === 'string' ? opt : opt.value;
+            return (
+              <button key={val} onClick={() => onChange(val)} className={cn("px-4 py-2 rounded-full text-xs font-bold border transition-all", value === val ? "bg-ink text-white border-ink" : "bg-white text-muted border-stroke")}>
+                {label}
+              </button>
+            );
+          })}
+        </div>
+      );
+    }
+
+    function IconGrid({ options, value, onChange }) {
+      return (
+        <div className="grid grid-cols-3 gap-3">
+          {options.map(opt => (
+            <button key={opt.label} onClick={() => onChange(opt.label)} className={cn("flex flex-col items-center gap-1 p-3 rounded-2xl border transition-all", value === opt.label ? "bg-ink text-white border-ink shadow-md" : "bg-white text-muted border-stroke")}>
+              <span className="text-2xl">{opt.emoji}</span>
+              <span className="text-[10px] font-bold tracking-tighter line-clamp-1">{opt.label}</span>
+            </button>
+          ))}
+        </div>
+      );
+    }
+
+    function RecordSection({ title, children }) {
+      return (
+        <div className="space-y-4">
+          <h4 className="text-sm font-bold flex items-center gap-2"><span className="w-1.5 h-4 bg-clay rounded-full" />{title}</h4>
+          {children}
+        </div>
+      );
+    }
+
+    function Bar({ height, label, active }) {
+      return (
+        <div className="flex flex-col items-center gap-2">
+          <div className={cn("w-3 rounded-full", active ? "bg-clay" : "bg-stroke")} style={{ height }} />
+          <span className="text-[10px] text-muted">{label}</span>
+        </div>
+      );
+    }
+
+    function GroupCard({ title, content, trend }) {
+      return (
+        <div className="bg-white rounded-[5px] p-4 shadow-sm border border-stroke space-y-2">
+          <div className="flex justify-between items-center">
+            <h4 className="text-sm font-bold">{title}</h4>
+            <span className={cn("text-[10px] font-mono", trend === '上升' ? "text-clay" : "text-forest")}>{trend}</span>
+          </div>
+          <p className="text-xs text-ink leading-relaxed opacity-80">{content}</p>
+        </div>
+      );
+    }
+
+    function BadgeBox({ label, emoji, enabled, date }) {
+      return (
+        <div className="bg-white p-6 rounded-[5px] border border-stroke flex flex-col items-center gap-4 shadow-sm hover:scale-105 transition-all duration-300 relative overflow-hidden cursor-pointer">
+          <div className={cn("w-20 h-20 rounded-[5px] flex items-center justify-center text-4xl shadow-inner border-2 transition-all", enabled ? "bg-parchment border-stroke" : "bg-gray-50 border-gray-100 grayscale opacity-40")}>{emoji}</div>
+          <div className="text-center space-y-1">
+            <span className="text-[11px] font-black tracking-tight text-ink block">{label}</span>
+            {date && <span className="text-[9px] font-bold text-muted uppercase tracking-widest">{date}</span>}
+          </div>
+          {enabled && <div className="absolute top-2 right-2 w-2 h-2 bg-clay rounded-full animate-pulse" />}
+        </div>
+      );
+    }
+
+    function InsightMetric({ icon: Icon, label, value }) {
+      return (
+        <div className="space-y-1">
+          <div className="flex items-center gap-1 text-muted"><Icon size={12} /><span className="text-[10px]">{label}</span></div>
+          <p className="text-sm font-bold">{value}</p>
+        </div>
+      );
+    }
+
+    // ── Views ──
+    function GenderSelect({ value, onChange }) {
+      const [open, setOpen] = React.useState(false);
+      const ref = React.useRef(null);
+      const options = ['不透露', '女性', '男性', '非二元'];
+      React.useEffect(() => {
+        const close = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+        document.addEventListener('mousedown', close);
+        return () => document.removeEventListener('mousedown', close);
+      }, []);
+      const base = { width:'100%', background:'rgba(27,18,0,0.55)', borderRadius:5, padding:'12px 16px',
+        fontSize:14, fontFamily:"'Noto Serif TC', serif", outline:'none' };
+      return (
+        <div ref={ref} style={{ position:'relative' }}>
+          <button type="button" onClick={() => setOpen(o => !o)} style={{ ...base,
+            display:'flex', justifyContent:'space-between', alignItems:'center', cursor:'pointer',
+            border: open ? '1px solid rgba(149,211,195,0.5)' : '1px solid rgba(149,211,195,0.2)',
+            color: value ? 'var(--cream)' : 'rgba(200,184,138,0.35)' }}>
+            <span>{value || '請選擇'}</span>
+            <span style={{ fontSize:9, opacity:0.5 }}>{open ? '▲' : '▼'}</span>
+          </button>
+          {open && (
+            <div style={{ position:'absolute', top:'calc(100% + 4px)', left:0, right:0, zIndex:300,
+              background:'rgba(15,9,0,0.97)', backdropFilter:'blur(24px)',
+              border:'1px solid rgba(149,211,195,0.2)', borderRadius:5,
+              boxShadow:'0 12px 40px rgba(0,0,0,0.7)', overflow:'hidden' }}>
+              {options.map((opt, i) => (
+                <button key={opt} type="button" onClick={() => { onChange(opt); setOpen(false); }}
+                  style={{ width:'100%', padding:'12px 16px', textAlign:'left', cursor:'pointer',
+                    background: value === opt ? 'rgba(149,211,195,0.08)' : 'none', border:'none',
+                    borderBottom: i < options.length-1 ? '1px solid rgba(149,211,195,0.07)' : 'none',
+                    color: value === opt ? 'var(--jade)' : 'var(--cream)',
+                    fontSize:14, fontFamily:"'Noto Serif TC', serif", letterSpacing:'0.05em' }}>
+                  {opt}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    function LoginGate({ onLogin }) {
+      const [step, setStep] = useState('splash'); // 'splash' | 'leaving' | 'form'
+      const [form, setForm] = useState({ email:'', nickname:'', gender:'', age:'' });
+      const isDesktop = window.innerWidth >= 768;
+      const splashImg = isDesktop ? 'login_desktop.jpg' : 'onboarding_v2.jpg';
+      const submit = (e) => { e.preventDefault(); if (!form.email||!form.nickname||!form.gender||!form.age) return; onLogin(form); };
+
+      const goToForm = () => {
+        setStep('leaving');
+        setTimeout(() => setStep('form'), 600);
+      };
+
+      const inputStyle = {
+        width:'100%', background:'rgba(27,18,0,0.55)', border:'1px solid rgba(149,211,195,0.2)',
+        borderRadius:12, padding:'12px 16px', color:'var(--cream)', fontSize:14,
+        outline:'none', fontFamily:"'Noto Serif TC', serif"
+      };
+      const labelStyle = { fontSize:13, fontWeight:700, letterSpacing:'0.15em', color:'var(--mist)', textTransform:'uppercase', display:'block', marginBottom:6 };
+
+      if (step === 'splash' || step === 'leaving') return (
+        <div style={{ position:'fixed', top:0, left:0, right:0, bottom:0, zIndex:200, background:'var(--night)',
+          animation: step === 'leaving' ? 'fadeOut 0.6s ease-in forwards' : 'onboardFadeIn 1s ease-out' }}>
+          {/* 滿版壁畫 */}
+          <img src={splashImg} alt="食緒壁畫"
+            style={{ position:'absolute', top:0, left:0, width:'100%', height:'100%', objectFit:'cover', objectPosition:'center' }} />
+
+          {/* 底部漸層 */}
+          <div style={{ position:'absolute', top:0, left:0, right:0, bottom:0, background:'linear-gradient(180deg, rgba(27,18,0,0.2) 0%, rgba(27,18,0,0) 35%, rgba(27,18,0,0) 50%, rgba(27,18,0,0.85) 80%, rgba(27,18,0,0.97) 100%)' }} />
+
+          {/* 角落金線 */}
+          <div style={{ position:'absolute', top:32, left:32, width:40, height:40, borderTop:'1px solid rgba(149,211,195,0.75)', borderLeft:'1px solid rgba(149,211,195,0.75)', pointerEvents:'none' }} />
+          <div style={{ position:'absolute', top:32, right:32, width:40, height:40, borderTop:'1px solid rgba(149,211,195,0.75)', borderRight:'1px solid rgba(149,211,195,0.75)', pointerEvents:'none' }} />
+
+          {/* 底部內容 */}
+          <div style={{ position:'absolute', bottom:0, left:0, right:0, display:'flex', flexDirection:'column', alignItems:'center', textAlign:'center', padding:'0 24px 56px',
+            animation:'onboardSlideUp 0.8s ease-out 0.5s both' }}>
+            <h1 style={{ fontSize:36, fontFamily:"'Noto Serif TC', serif", fontWeight:900, color:'var(--jade)', letterSpacing:'0.3em', textShadow:'0 2px 20px rgba(27,18,0,0.9)', marginBottom:16 }}>食緒曆</h1>
+            <p style={{ fontSize:15, lineHeight:2, letterSpacing:'0.04em', color:'var(--cream)', fontFamily:"'Noto Serif TC', serif", maxWidth:360, textShadow:'0 1px 8px rgba(0,0,0,0.8)', marginBottom:36 }}>
+              每一餐都是一場神聖的儀式，<br/>
+              在口腹之欲與心靈覺察之間，<br/>
+              共築屬於你的動態圖鑑。
+            </p>
+
+            {/* 蠟封按鈕 */}
+            <button onClick={goToForm} className="wax-seal-active"
+              style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:12, background:'none', border:'none', cursor:'pointer' }}>
+              <div style={{ width:96, height:96, background:'var(--crimson)', borderRadius:'50%', border:'4px solid rgba(255,180,160,0.25)',
+                boxShadow:'0 0 0 8px rgba(133,41,27,0.15), 0 12px 40px rgba(133,41,27,0.6)',
+                display:'flex', alignItems:'center', justifyContent:'center', position:'relative', overflow:'hidden' }}>
+                <div style={{ position:'absolute', inset:0, background:'radial-gradient(circle at 40% 35%, rgba(255,180,160,0.35), transparent 65%)' }} />
+                <span style={{ color:'var(--blush)', fontSize:20, fontFamily:"'Noto Serif TC', serif", fontWeight:900, letterSpacing:'-0.02em', lineHeight:1.2, position:'relative', zIndex:1 }}>
+                  開始<br/>修行
+                </span>
+              </div>
+              <span style={{ fontSize:13, fontWeight:700, letterSpacing:'0.18em', color:'var(--jade)', fontFamily:"'Noto Serif TC', serif", textTransform:'uppercase' }}>
+                Commence Journey
+              </span>
+            </button>
+          </div>
+        </div>
+      );
+
+      return (
+        <div style={{ position:'fixed', top:0, left:0, right:0, bottom:0, background:'var(--night)', animation:'onboardFadeIn 0.8s ease-out' }}>
+          {/* 壁畫背景（淡化） */}
+          <img src={splashImg} alt=""
+            style={{ position:'absolute', top:0, left:0, width:'100%', height:'100%', objectFit:'cover', objectPosition:'center', opacity:0.45 }} />
+          <div style={{ position:'absolute', inset:0, background:'rgba(27,18,0,0.72)' }} />
+
+          {/* 登入面板：置中 */}
+          <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center', padding:'24px' }}>
+            <div style={{ width:'100%', maxWidth:440, background:'rgba(21,13,0,0.88)', backdropFilter:'blur(20px)', border:'1px solid rgba(149,211,195,0.15)', borderRadius:5, padding:'40px 36px', position:'relative' }}>
+
+              {/* 角落金線 */}
+              <div style={{ position:'absolute', top:20, left:20, width:28, height:28, borderTop:'1px solid rgba(149,211,195,0.65)', borderLeft:'1px solid rgba(149,211,195,0.65)' }} />
+              <div style={{ position:'absolute', bottom:20, right:20, width:28, height:28, borderBottom:'1px solid rgba(149,211,195,0.65)', borderRight:'1px solid rgba(149,211,195,0.65)' }} />
+
+              {/* 標題 */}
+              <div style={{ marginBottom:28, textAlign:'center' }}>
+                <p style={{ fontSize:13, letterSpacing:'0.25em', color:'var(--mist)', textTransform:'uppercase', fontFamily:"'Noto Serif TC', serif", marginBottom:10 }}>食緒曆 · FoodMood</p>
+                <h1 style={{ fontSize:24, fontFamily:"'Noto Serif TC', serif", fontWeight:900, color:'var(--jade)', letterSpacing:'0.1em', lineHeight:1.4, margin:0 }}>建立你的食緒檔案</h1>
+                <p style={{ marginTop:8, fontSize:13, color:'var(--sand)', fontFamily:"'Noto Serif TC', serif" }}>無需密碼，無需 Google</p>
+              </div>
+
+              <div style={{ height:1, background:'linear-gradient(to right, transparent, rgba(149,211,195,0.2), transparent)', marginBottom:24 }} />
+
+              {/* 表單 */}
+              <form onSubmit={submit} style={{ display:'flex', flexDirection:'column', gap:14 }}>
+                <div>
+                  <label style={labelStyle}>Email</label>
+                  <input style={inputStyle} type="email" placeholder="your@email.com" required
+                    value={form.email} onChange={e => setForm({...form,email:e.target.value})} />
+                </div>
+                <div>
+                  <label style={labelStyle}>暱稱</label>
+                  <input style={inputStyle} type="text" placeholder="你的稱號" required
+                    value={form.nickname} onChange={e => setForm({...form,nickname:e.target.value})} />
+                </div>
+                <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
+                  <div>
+                    <label style={labelStyle}>性別</label>
+                    <GenderSelect value={form.gender} onChange={v => setForm({...form,gender:v})} />
+                  </div>
+                  <div>
+                    <label style={labelStyle}>年齡</label>
+                    <input style={inputStyle} type="number" min={1} max={120} placeholder="歲" required
+                      value={form.age} onChange={e => setForm({...form,age:e.target.value})} />
+                  </div>
+                </div>
+                <button type="submit" className="wax-seal-active"
+                  style={{ marginTop:6, width:'100%', background:'var(--crimson)', border:'2px solid rgba(255,180,160,0.2)',
+                    borderRadius:12, padding:'14px 0', color:'var(--blush)', fontSize:13, fontWeight:800,
+                    letterSpacing:'0.2em', fontFamily:"'Noto Serif TC', serif", cursor:'pointer',
+                    boxShadow:'0 0 0 6px rgba(133,41,27,0.12), 0 8px 32px rgba(133,41,27,0.5)' }}>
+                  進入食緒曆
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function HomeView({ records }) {
+      const latestType = records[0] ? MBEI_TYPES[records[0].mbeiCode] : MBEI_TYPES['MPLR'];
+      const isUnlocked = records.length >= 10;
+      const card = { background:'rgba(21,13,0,0.7)', border:'1px solid rgba(149,211,195,0.12)', borderRadius:5, padding:'28px 24px', position:'relative' };
+      return (
+        <div style={{ display:'flex', flexDirection:'column', gap:24, fontFamily:"'Noto Serif TC', serif", animation:'onboardFadeIn 0.6s ease-out' }}>
+          {/* 頁首 */}
+          <header style={{ paddingBottom:16, borderBottom:'1px solid rgba(149,211,195,0.1)' }}>
+            <p style={{ fontSize:15, color:'var(--mist)', letterSpacing:'0.2em', marginBottom:6 }}>今晚的胃，比你更誠實</p>
+            <h1 style={{ fontSize:32, fontFamily:"'Noto Serif TC', serif", fontWeight:900, color:'var(--jade)', letterSpacing:'0.15em', margin:0 }}>今日食緒</h1>
+          </header>
+
+          {/* 上排：宜忌 + 型格 */}
+          <div style={{ display:'grid', gap:16 }} className="lg:grid-cols-2">
+            {/* 宜忌卡 */}
+            <section style={card}>
+              <p style={{ fontSize:13, color:'var(--mist)', letterSpacing:'0.2em', marginBottom:16, fontWeight:500 }}>今日飲食指引</p>
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, paddingBottom:20, borderBottom:'1px solid rgba(149,211,195,0.08)', marginBottom:20 }}>
+                <div>
+                  <div style={{ display:'inline-flex', alignItems:'center', gap:6, background:'rgba(74,107,93,0.2)', border:'1px solid rgba(74,107,93,0.3)', borderRadius:20, padding:'4px 12px', marginBottom:10 }}>
+                    <span style={{ color:'var(--jade)', fontSize:14, fontWeight:900 }}>宜</span>
+                    <span style={{ color:'var(--sand)', fontSize:13, fontWeight:500 }}>溫水修復</span>
+                  </div>
+                  <p style={{ fontSize:14, color:'var(--cream)', lineHeight:1.7 }}>清爽飲食、慢食、深呼吸</p>
+                </div>
+                <div>
+                  <div style={{ display:'inline-flex', alignItems:'center', gap:6, background:'rgba(192,74,59,0.15)', border:'1px solid rgba(192,74,59,0.25)', borderRadius:20, padding:'4px 12px', marginBottom:10 }}>
+                    <span style={{ color:'var(--blush)', fontSize:14, fontWeight:900 }}>忌</span>
+                    <span style={{ color:'var(--sand)', fontSize:13, fontWeight:500 }}>空腹咖啡</span>
+                  </div>
+                  <p style={{ fontSize:14, color:'var(--cream)', lineHeight:1.7 }}>深夜熬夜、過度硬撐</p>
+                </div>
+              </div>
+              <div>
+                <p style={{ fontSize:13, color:'var(--mist)', letterSpacing:'0.15em', marginBottom:8, fontWeight:500 }}>今日食緒摘要</p>
+                <p style={{ fontSize:15, color:'var(--sand)', lineHeight:1.9, borderLeft:'3px solid rgba(149,211,195,0.65)', paddingLeft:14 }}>「微焦慮但可修復，目前的節奏適合暫停三分鐘，聽聽身體的聲音。」</p>
+              </div>
+            </section>
+
+            {/* 型格卡 */}
+            <section style={card}>
+              {isUnlocked ? (
+                <div style={{ display:'flex', gap:20, alignItems:'center' }}>
+                  <div style={{ width:72, height:90, borderRadius:5, overflow:'hidden', border:'1px solid rgba(149,211,195,0.2)', flexShrink:0 }}>
+                    <img src={CREATURE_IMG[latestType.code]} alt={latestType.creature} style={{ width:'100%', height:'100%', objectFit:'contain', display:'block' }} />
+                  </div>
+                  <div style={{ flex:1 }}>
+                    <p style={{ fontSize:13, color:'var(--mist)', letterSpacing:'0.15em', marginBottom:6, fontWeight:500 }}>已照見 · 型格</p>
+                    <div style={{ display:'inline-block', background:'rgba(149,211,195,0.08)', border:'1px solid rgba(149,211,195,0.15)', borderRadius:10, padding:'2px 10px', fontSize:13, color:'var(--sand)', marginBottom:8, fontWeight:500 }}>{latestType.creature}</div>
+                    <h3 style={{ fontSize:20, fontFamily:"'Noto Serif TC', serif", fontWeight:900, color:'var(--jade)', letterSpacing:'0.05em', margin:'0 0 10px' }}>{latestType.code}｜{latestType.name}</h3>
+                    <p style={{ fontSize:15, color:'var(--sand)', lineHeight:1.8, borderLeft:'3px solid rgba(217,138,91,0.5)', paddingLeft:12 }}>「{latestType.insight}」</p>
+                  </div>
+                </div>
+              ) : (
+                <div style={{ display:'flex', flexDirection:'column', alignItems:'center', textAlign:'center', padding:'16px 0', gap:16 }}>
+                  <div style={{ width:72, height:72, borderRadius:'50%', border:'1px solid rgba(149,211,195,0.2)', display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(149,211,195,0.05)' }}>
+                    <span style={{ fontSize:18, fontFamily:"'Noto Serif TC', serif", fontWeight:900, color:'var(--jade)' }}>{records.length}<span style={{ opacity:0.3 }}>/</span>10</span>
+                  </div>
+                  <div>
+                    <h3 style={{ fontSize:18, fontFamily:"'Noto Serif TC', serif", fontWeight:900, color:'var(--jade)', letterSpacing:'0.1em', marginBottom:8 }}>靈光凝練中</h3>
+                    <p style={{ fontSize:15, color:'var(--sand)', lineHeight:1.9 }}>尚需 {10-records.length} 次食緒紀錄<br />即可照見你的食緒型格</p>
+                  </div>
+                </div>
+              )}
+            </section>
+          </div>
+
+          {/* 下排：箴言 + 趨勢 */}
+          <div style={{ display:'grid', gridTemplateColumns:'1fr', gap:16 }}>
+            {/* 箴言 */}
+            <section style={{ ...card, background:'rgba(74,107,93,0.12)', border:'1px solid rgba(74,107,93,0.2)' }}>
+              <p style={{ fontSize:18, fontFamily:"'Noto Serif TC', serif", color:'var(--cream)', lineHeight:2, fontWeight:700, margin:'0 0 16px' }}>
+                「今天不是亂吃，只是身體在提醒你慢一點。先照顧胃，再整理情緒。」
+              </p>
+              <p style={{ fontSize:13, color:'var(--mist)', letterSpacing:'0.15em', fontWeight:500 }}>食緒曆 · 朱雀卷</p>
+            </section>
+            {/* 趨勢 */}
+            <section style={{ ...card, background:'rgba(133,41,27,0.12)', border:'1px solid rgba(255,180,160,0.12)' }}>
+              <p style={{ fontSize:13, color:'var(--blush)', letterSpacing:'0.15em', marginBottom:12, fontWeight:500 }}>群體微觀 · 趨勢</p>
+              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:14 }}>
+                <span style={{ fontSize:13, fontWeight:900, color:'var(--blush)', background:'rgba(192,74,59,0.2)', border:'1px solid rgba(192,74,59,0.25)', borderRadius:20, padding:'3px 12px' }}>報告週警訊</span>
+                <span style={{ fontSize:13, color:'var(--sand)' }}>熱度 ＋40%</span>
+              </div>
+              <p style={{ fontSize:15, color:'var(--sand)', lineHeight:1.9 }}>本週「空腹咖啡」紀錄異常上升 40%，焦慮標註同步增加。提醒補足水分。</p>
+              <button style={{ width:'100%', background:'none', border:'none', borderTop:'1px solid rgba(149,211,195,0.08)', paddingTop:14, marginTop:14, color:'var(--mist)', fontSize:15, fontFamily:"'Noto Serif TC', serif", cursor:'pointer', textAlign:'left' }}>
+                查看完整趨勢 →
+              </button>
+            </section>
+          </div>
+        </div>
+      );
+    }
+
+    function AlmanacView({ records }) {
+      return (
+        <div className="space-y-10 fade-in">
+          <header className="flex justify-between items-center">
+            <div className="space-y-1">
+              <h2 className="text-4xl font-serif font-black text-jade tracking-tighter">食緒曆卡</h2>
+              <p className="text-sm text-muted font-bold uppercase tracking-widest">PERSONAL CALENDAR ARCHIVE</p>
+            </div>
+            <div className="text-lg font-black text-ink font-serif border-b-4 border-clay/40 pb-1">2026年 五月</div>
+          </header>
+          <div className="grid lg:grid-cols-3 gap-10 items-start">
+            <div className="lg:col-span-2 space-y-8">
+              <div className="bg-white rounded-[5px] p-10 shadow-card border border-stroke relative overflow-hidden">
+                <div className="paper-texture" style={{opacity:0.02}} />
+                <div className="grid grid-cols-7 gap-4 text-center">
+                  {['日','一','二','三','四','五','六'].map(d => <div key={d} className="text-xs text-muted font-black py-4 uppercase tracking-widest border-b border-parchment">{d}</div>)}
+                  {Array.from({length:31}).map((_,i) => {
+                    const day = i+1;
+                    const hasRecord = day === 9 || day === 10;
+                    return (
+                      <button key={i} className="relative aspect-square flex items-center justify-center hover:bg-parchment rounded-2xl transition-colors">
+                        <span className={cn("text-sm font-bold", day===10 ? "bg-ink text-white w-10 h-10 rounded-full flex items-center justify-center shadow-lg" : "text-ink")}>{day}</span>
+                        {hasRecord && <div className="absolute bottom-1 flex gap-1"><div className="w-1.5 h-1.5 rounded-full bg-forest" /><div className="w-1.5 h-1.5 rounded-full bg-clay" /></div>}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              <div className="hidden lg:block bg-parchment p-8 rounded-[5px] border border-stroke/50 text-muted text-sm">本月尚有 22 天未凝練。紀錄是為了看見原本看不見的慣性。</div>
+            </div>
+            <div className="lg:col-span-1 space-y-6">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-black flex items-center gap-2 uppercase tracking-[0.2em] text-muted"><CalendarIcon size={18} className="text-amber" />今日紀錄回顧</h3>
+                <span className="text-[10px] font-bold text-muted bg-stroke px-2 py-0.5 rounded-full">TODAY</span>
+              </div>
+              <div className="space-y-4">
+                {records.length > 0 ? records.map(r => (
+                  <div key={r.id} className="bg-white rounded-[5px] p-6 shadow-sm border border-stroke flex flex-col gap-4 hover:shadow-md transition-shadow">
+                    <div className="flex gap-4 items-start">
+                      <div className="w-16 h-16 bg-parchment rounded-2xl flex items-center justify-center text-3xl shrink-0 shadow-inner border border-stroke/50">{r.foodEmoji||'🥣'}</div>
+                      <div className="flex-1 space-y-1">
+                        <div className="flex justify-between items-center">
+                          <h4 className="font-black text-base text-ink">{r.mealType} · {r.time}</h4>
+                          <span className="text-[10px] bg-ink px-2 py-0.5 rounded text-white font-mono">{r.mbeiCode}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-xs font-bold text-muted">
+                          <span className="text-forest">餐後心情：{r.mood}</span>
+                          <span className="text-stroke font-normal">|</span>
+                          <span>{r.bodyFeeling}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex gap-3 pt-2 border-t border-parchment">
+                      <span className="text-[10px] font-black text-forest bg-forest/5 px-3 py-1 rounded-full border border-forest/10 uppercase tracking-widest">宜：多補水 慢食</span>
+                      <span className="text-[10px] font-black text-clay bg-clay/5 px-3 py-1 rounded-full border border-clay/10 uppercase tracking-widest">忌：深夜飲酒</span>
+                    </div>
+                  </div>
+                )) : (
+                  <div className="bg-white rounded-[5px] p-10 text-center border-2 border-dashed border-stroke text-muted text-sm font-bold">今日尚無食緒紀錄。</div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function InsightView() {
+      const [tab, setTab] = useState('personal');
+      return (
+        <div className="space-y-10 fade-in">
+          <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+            <div className="space-y-1">
+              <h2 className="text-4xl font-serif font-black text-jade tracking-tighter">食緒洞察</h2>
+              <p className="text-sm text-muted font-bold uppercase tracking-widest">DIETARY INTROSPECTION & DATA</p>
+            </div>
+            <div className="flex bg-parchment p-1.5 rounded-2xl border border-stroke/50 shadow-inner w-full md:w-auto">
+              {['personal','group'].map(t => (
+                <button key={t} onClick={() => setTab(t)} className={cn("flex-1 md:w-32 px-4 py-2.5 rounded-xl text-xs font-black transition-all uppercase tracking-widest", tab===t ? "bg-white text-ink shadow-md" : "text-muted hover:text-ink")}>
+                  {t==='personal' ? '個人洞察' : '群體共響'}
+                </button>
+              ))}
+            </div>
+          </header>
+          {tab === 'personal' ? (
+            <div className="grid lg:grid-cols-2 gap-10">
+              <div className="space-y-8 flex flex-col">
+                <div className="bg-white rounded-[5px] p-10 shadow-card border border-stroke space-y-8 flex-1 flex flex-col justify-center relative overflow-hidden">
+                  <div className="paper-texture" style={{opacity:0.02}} />
+                  <div className="space-y-2 relative z-10">
+                    <h4 className="text-xs font-black text-muted uppercase tracking-[0.3em]">本週最常出現型格</h4>
+                    <div className="flex items-center gap-4">
+                      <div className="text-5xl bg-parchment w-20 h-20 rounded-[5px] flex items-center justify-center shadow-inner border border-stroke/50">🦊</div>
+                      <div>
+                        <span className="text-[10px] font-mono bg-ink text-white px-2 py-0.5 rounded mb-1 inline-block">MPLR</span>
+                        <h3 className="font-serif font-black text-2xl text-ink tracking-tighter">續命九尾型</h3>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
+                    <InsightMetric icon={ZapIcon} label="最常觸發情境" value="報告週 / 趕工" />
+                    <InsightMetric icon={CoffeeIcon} label="情緒修復出口" value="高糖甜點 / 拿鐵" />
+                  </div>
+                  <div className="relative z-10 pt-4 border-t border-parchment">
+                    <p className="text-base text-ink leading-relaxed font-serif">「你的食緒顯示出一種『補償性進食』的傾向。並非真的飢餓，而是大腦在尋求高熱量來抵銷壓力造成的荷爾蒙失衡。」</p>
+                  </div>
+                </div>
+              </div>
+              <div className="space-y-8">
+                <div className="bg-white rounded-[5px] p-10 shadow-card border border-stroke flex flex-col h-full">
+                  <div className="flex justify-between items-center mb-8">
+                    <h4 className="text-sm font-black uppercase tracking-[0.2em] text-muted">情緒與進食關聯度分析</h4>
+                    <span className="text-[10px] font-bold text-forest bg-forest/10 px-2 py-0.5 rounded-full uppercase tracking-widest">穩定關聯</span>
+                  </div>
+                  <div className="flex-1 h-64 flex items-end justify-between px-6 pb-4 border-b border-parchment">
+                    <Bar height="30%" label="一" /><Bar height="60%" label="二" /><Bar height="90%" label="三" active />
+                    <Bar height="40%" label="四" /><Bar height="50%" label="五" /><Bar height="20%" label="六" /><Bar height="15%" label="日" />
+                  </div>
+                  <div className="mt-6 p-4 bg-parchment/50 rounded-[5px] border border-stroke/50">
+                    <p className="text-xs text-muted font-bold leading-relaxed">💡 指導：週三的進食與情緒波動最高，建議在當日增加 500ml 飲水量，並提早 30 分鐘就寢，觀察情緒是否趨於平穩。</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+              <GroupCard title="報告週咖啡警訊" content="本週全體用戶「空腹咖啡」頻次較上週上升 40%，且多伴隨「心悸」與「趕工」情境。社群總焦慮感上升 12%。" trend="上升" />
+              <GroupCard title="週一低潮效應" content="週一早晨 10:00 前，高達 65% 的用戶標註了「煩躁」心情，早餐多選擇「精緻加工碳水」，修補週一不適感。" trend="穩定" />
+              <GroupCard title="深夜孤獨進食" content="深夜 23:00 後的進食紀錄中，80% 的用戶標註了「獨處」，且飯後心情多為「空虛」，加工食品比例高達 75%。" trend="下降" />
+              <div className="bg-ink rounded-[5px] p-8 flex flex-col justify-center items-center text-center space-y-4 border-4 border-white shadow-2xl">
+                <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center text-white"><InfoIcon size={32} /></div>
+                <h4 className="text-white font-serif font-black text-lg tracking-tighter">加入群體研究</h4>
+                <p className="text-white/60 text-xs leading-relaxed">貢獻你的去識別化數據，<br />幫助我們更了解華人社會的食緒變遷。</p>
+                <button className="bg-white text-ink px-6 py-2 rounded-full text-xs font-black uppercase tracking-widest mt-2 hover:scale-105 transition-transform">參與計畫</button>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    function ProfileView({ records, loginProfile, onLogout }) {
+      const latestType = records[0] ? MBEI_TYPES[records[0].mbeiCode] : MBEI_TYPES['MPLR'];
+      const [showEncyclopedia, setShowEncyclopedia] = useState(false);
+      const [selectedCreature, setSelectedCreature] = useState(null);
+      const touchStartX = React.useRef(null);
+      const encCreatures = Object.values(MBEI_TYPES);
+      const encIdx = selectedCreature ? encCreatures.findIndex(c => c.code === selectedCreature.code) : 0;
+      const goCreature = dir => setSelectedCreature(encCreatures[(encIdx + dir + encCreatures.length) % encCreatures.length]);
+      const [rankTab, setRankTab] = useState('personal');
+
+      const personalLeaderboard = useMemo(() => {
+        const seed = LEADERBOARD_DATA.slice(0,5).map((u,i) => ({...u, points: Math.max(3,18-i*3), scoreLabel:'紀錄次數'}));
+        const userRow = { rank:0, name:loginProfile.nickname, points:records.length, code:latestType.code, isUser:true, scoreLabel:'紀錄次數' };
+        return [...seed, userRow].sort((a,b)=>b.points-a.points).map((u,idx)=>({...u,rank:idx+1}));
+      }, [loginProfile.nickname, records.length, latestType.code]);
+
+      const mbeiLeaderboard = useMemo(() => {
+        return Object.values(MBEI_TYPES).map((type,idx)=>({
+          name:`${type.code}｜${type.name}`, points:Math.max(15,96-idx*3), emoji:type.emoji, code:type.code, scoreLabel:`${type.code} 群體分`
+        })).sort((a,b)=>b.points-a.points).map((u,idx)=>({...u,rank:idx+1}));
+      }, []);
+
+      const board = rankTab === 'personal' ? personalLeaderboard : mbeiLeaderboard;
+
+      return (
+        <div className="space-y-12 fade-in">
+          <div className="grid lg:grid-cols-3 gap-10">
+            <div className="lg:col-span-1 space-y-8">
+              <header className="bg-white rounded-[5px] p-10 shadow-card border border-stroke flex flex-col items-center gap-6 relative overflow-hidden">
+                <div className="paper-texture" style={{opacity:0.02}} />
+                <div style={{ position:'relative', display:'inline-block' }}>
+                  <div style={{ width:120, height:150, borderRadius:5, overflow:'hidden', border:'4px solid #F4EFE6', boxShadow:'0 8px 32px rgba(0,0,0,0.18)', background:'var(--paper)' }}>
+                    <img src={CREATURE_IMG[latestType.code]} alt={latestType.creature} style={{ width:'100%', height:'100%', objectFit:'contain', display:'block' }} />
+                  </div>
+                  <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-clay text-white text-[10px] px-4 py-1 rounded-full font-black tracking-widest border-4 border-white shadow-lg whitespace-nowrap">九尾修行中</div>
+                </div>
+                <div className="text-center space-y-2">
+                  <h2 className="text-3xl font-serif font-black text-jade tracking-tighter">今日食修者</h2>
+                  <div className="inline-block px-4 py-1 bg-parchment rounded-full text-xs font-bold text-muted border border-stroke/50 uppercase tracking-widest">{latestType.name}</div>
+                  <p className="text-sm text-muted font-medium mt-2">{loginProfile.nickname} · {loginProfile.gender} · {loginProfile.age} 歲</p>
+                  <p className="text-xs text-muted">{loginProfile.email}</p>
+                </div>
+                <button onClick={onLogout} className="w-full bg-ink text-white py-3 rounded-2xl font-black tracking-[0.15em] hover:opacity-90 transition-opacity">切換使用者 / 登出</button>
+                <div className="w-full pt-6 mt-6 border-t border-parchment grid grid-cols-2 gap-4">
+                  <div className="text-center"><p className="text-[10px] font-black text-muted uppercase tracking-widest mb-1">累積功德</p><p className="text-xl font-serif font-black text-ink">1,280</p></div>
+                  <div className="text-center"><p className="text-[10px] font-black text-muted uppercase tracking-widest mb-1">連續紀錄</p><p className="text-xl font-serif font-black text-ink">12 <span className="text-xs">天</span></p></div>
+                </div>
+              </header>
+              <section className="bg-ink text-white rounded-[5px] p-8 space-y-6 relative overflow-hidden shadow-2xl border-4 border-white">
+                <div className="paper-texture" style={{opacity:0.1}} />
+                <div className="space-y-1 relative z-10">
+                  <h3 className="text-sm font-black uppercase tracking-[0.2em] text-white/50">當前進度</h3>
+                  <p className="text-xl font-serif font-black tracking-tighter">照見真我尚需 8 步</p>
+                </div>
+                <div className="h-2 bg-white/10 rounded-full relative overflow-hidden z-10"><div className="absolute inset-y-0 left-0 bg-clay progress-bar" style={{width:'20%'}} /></div>
+                <button onClick={() => setShowEncyclopedia(true)} className="w-full bg-white/10 hover:bg-white/20 text-white p-4 rounded-2xl flex justify-between items-center font-black text-xs uppercase tracking-widest transition-all z-10 relative">
+                  <span>16 型山海經圖鑑</span><ChevronRightIcon size={16} />
+                </button>
+              </section>
+            </div>
+            <div className="lg:col-span-2 space-y-10">
+              <section className="space-y-6">
+                <div className="flex justify-between items-center px-2">
+                  <h3 className="text-sm font-black flex items-center gap-2 uppercase tracking-[0.2em] text-muted"><AwardIcon size={20} className="text-amber" />成就勳章寶庫</h3>
+                  <span className="text-[10px] font-bold text-muted underline cursor-pointer">查看所有 24 個</span>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
+                  <BadgeBox label="誠實紀錄者" emoji="✍️" enabled date="2024.05.01" />
+                  <BadgeBox label="補水修行者" emoji="💧" enabled date="2024.05.03" />
+                  <BadgeBox label="咖啡續命師" emoji="☕" enabled date="2024.05.08" />
+                  <BadgeBox label="半夜觀察員" emoji="🌙" date="鎖定中" />
+                </div>
+              </section>
+              <section className="space-y-6">
+                <div className="flex items-center justify-between px-2">
+                  <div className="flex items-center gap-3"><AwardIcon size={22} className="text-clay" /><h3 className="text-2xl font-serif font-black tracking-tighter text-ink">食修功德排行榜</h3></div>
+                  <span className="text-[10px] font-black text-muted uppercase tracking-widest opacity-60">更新於 5 分鐘前</span>
+                </div>
+                <div className="px-2">
+                  <div className="inline-flex bg-parchment p-1.5 rounded-2xl border border-stroke/50 shadow-inner w-full md:w-auto">
+                    <button onClick={() => setRankTab('personal')} className={cn("px-4 py-2 rounded-xl text-xs font-black tracking-widest", rankTab==='personal' ? "bg-white text-ink shadow-sm" : "text-muted")}>個人榜單 RANK</button>
+                    <button onClick={() => setRankTab('mbei')} className={cn("px-4 py-2 rounded-xl text-xs font-black tracking-widest", rankTab==='mbei' ? "bg-white text-ink shadow-sm" : "text-muted")}>16型種類榜單 RANK</button>
+                  </div>
+                </div>
+                <div className="bg-white rounded-[5px] border-4 border-ink overflow-hidden shadow-2xl relative">
+                  <div className="paper-texture" style={{opacity:0.02}} />
+                  {board.map(user => (
+                    <div key={user.rank} className={cn("flex items-center justify-between p-6 md:p-8 border-b border-parchment last:border-0 transition-colors", user.isUser ? "bg-clay/10 hover:bg-clay/15" : "hover:bg-parchment/30")}>
+                      <div className="flex items-center gap-6">
+                        <span className={cn("w-8 text-center font-serif font-black text-lg md:text-xl", user.rank===1?"text-amber":user.rank===2?"text-muted":user.rank===3?"text-clay":"text-stroke")}>{user.rank}</span>
+                        <div style={{ width:44, height:55, borderRadius:5, overflow:'hidden', flexShrink:0, border:'1px solid rgba(234,228,217,0.5)', background:'var(--paper)' }}>
+                          <img src={CREATURE_IMG[user.code]} alt={user.name} style={{ width:'100%', height:'100%', objectFit:'contain', display:'block' }} />
+                        </div>
+                        <div>
+                          <p className="text-lg font-black text-ink flex items-center gap-2">{user.name}{rankTab==='personal'&&user.isUser&&<span className="text-[10px] bg-ink text-white px-3 py-0.5 rounded-full uppercase tracking-tighter font-black">這是你</span>}</p>
+                          <p className="text-xs text-muted font-bold uppercase tracking-widest">{rankTab==='personal'?'依暱稱統計 · 紀錄總次數':`MBEATI ${latestType.code} 群體排名`}</p>
+                        </div>
+                      </div>
+                      <div className="text-right"><p className="text-xl font-serif font-black text-ink">{user.points}</p><p className="text-[10px] font-black text-muted uppercase tracking-widest">{user.scoreLabel}</p></div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            </div>
+          </div>
+          {showEncyclopedia && (
+            <div style={{ position:'fixed', inset:0, zIndex:110, display:'flex', background:'rgba(0,0,0,0.85)', backdropFilter:'blur(8px)' }}>
+              {/* 關閉背景層 */}
+              <div style={{ position:'absolute', inset:0 }} onClick={() => setShowEncyclopedia(false)} />
+
+              {/* 主容器 */}
+              <div style={{ position:'relative', zIndex:10, width:'100%', maxWidth:1100, margin:'auto', height:'92vh',
+                background:'var(--deep)', border:'1px solid rgba(149,211,195,0.2)', borderRadius:5,
+                display:'flex', flexDirection:'column', overflow:'hidden', animation:'onboardFadeIn 0.4s ease-out',
+                boxShadow:'0 32px 80px rgba(0,0,0,0.8)' }}>
+
+                {/* 頂欄 */}
+                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center',
+                  padding:'20px 28px', borderBottom:'1px solid rgba(149,211,195,0.12)', flexShrink:0 }}>
+                  <div>
+                    <p style={{ fontSize:13, color:'var(--mist)', letterSpacing:'0.2em', marginBottom:4, fontFamily:"'Noto Serif TC', serif", fontWeight:500 }}>食緒型格 · 山海神獸</p>
+                    <h3 style={{ fontSize:24, fontFamily:"'Noto Serif TC', serif", fontWeight:900, color:'var(--jade)', letterSpacing:'0.1em', margin:0 }}>十六型圖鑑</h3>
+                  </div>
+                  <button onClick={() => setShowEncyclopedia(false)}
+                    style={{ width:40, height:40, borderRadius:'50%', background:'rgba(149,211,195,0.1)',
+                      border:'1px solid rgba(149,211,195,0.25)', color:'var(--jade)', fontSize:20,
+                      cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:"'Noto Serif TC', serif" }}>
+                    ✕
+                  </button>
+                </div>
+
+                {/* 內容：左圖右列表 */}
+                <div style={{ display:'flex', flex:1, overflow:'hidden' }}>
+                  {/* 左側：圖鑑壁畫 */}
+                  <div style={{ width:340, flexShrink:0, position:'relative', overflow:'hidden', borderRight:'1px solid rgba(149,211,195,0.1)' }}
+                    className="hidden md:block">
+                    <img src="encyclopedia_bg.jpg" alt="十六型神獸圖鑑"
+                      style={{ width:'100%', height:'100%', objectFit:'cover', objectPosition:'top center' }} />
+                    <div style={{ position:'absolute', inset:0,
+                      background:'linear-gradient(to right, rgba(18,12,0,0) 0%, rgba(18,12,0,0.5) 100%)' }} />
+                    <div style={{ position:'absolute', bottom:24, left:0, right:0, textAlign:'center' }}>
+                      <p style={{ fontSize:13, color:'var(--mist)', fontFamily:"'Noto Serif TC', serif", fontWeight:500, letterSpacing:'0.15em' }}>壁畫 · 諸神降世</p>
+                    </div>
+                  </div>
+
+                  {/* 右側：類型列表 */}
+                  <div style={{ flex:1, overflowY:'auto', padding:'16px 20px', display:'grid',
+                    gridTemplateColumns:'repeat(auto-fill, minmax(240px, 1fr))', gap:12, alignContent:'start' }}
+                    className="scrollbar-hide">
+                    {Object.values(MBEI_TYPES).map(type => (
+                      <div key={type.code}
+                        onClick={() => setSelectedCreature(type)}
+                        style={{ background:'rgba(21,13,0,0.8)', border:'1px solid rgba(149,211,195,0.12)',
+                          borderRadius:5, padding:'16px 18px', display:'flex', gap:14, alignItems:'flex-start',
+                          transition:'border-color 0.2s', cursor:'pointer' }}
+                        onMouseEnter={e => e.currentTarget.style.borderColor='rgba(149,211,195,0.35)'}
+                        onMouseLeave={e => e.currentTarget.style.borderColor='rgba(149,211,195,0.12)'}>
+                        <div style={{ width:52, height:65, flexShrink:0, borderRadius:5, overflow:'hidden',
+                          border:'1px solid rgba(149,211,195,0.15)' }}>
+                          <img src={CREATURE_IMG[type.code]} alt={type.creature}
+                            style={{ width:'100%', height:'100%', objectFit:'contain', display:'block' }} />
+                        </div>
+                        <div style={{ flex:1, minWidth:0 }}>
+                          <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:5 }}>
+                            <span style={{ fontSize:11, fontWeight:700, color:'var(--jade)', background:'rgba(149,211,195,0.12)',
+                              border:'1px solid rgba(149,211,195,0.2)', borderRadius:6, padding:'1px 7px',
+                              fontFamily:"'Noto Serif TC', serif", letterSpacing:'0.1em' }}>{type.code}</span>
+                            <span style={{ fontSize:13, color:'var(--mist)', fontFamily:"'Noto Serif TC', serif", fontWeight:500 }}>{type.creature}</span>
+                          </div>
+                          <h4 style={{ fontSize:16, fontFamily:"'Noto Serif TC', serif", fontWeight:900,
+                            color:'var(--cream)', letterSpacing:'0.05em', margin:'0 0 6px' }}>{type.name}</h4>
+                          <p style={{ fontSize:13, color:'var(--sand)', lineHeight:1.7, fontFamily:"'Noto Serif TC', serif",
+                            fontWeight:400, margin:0 }}>{type.description}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {selectedCreature && (
+            <div
+              onClick={() => setSelectedCreature(null)}
+              onTouchStart={e => { touchStartX.current = e.touches[0].clientX; }}
+              onTouchEnd={e => { const dx = e.changedTouches[0].clientX - touchStartX.current; if (Math.abs(dx) > 50) goCreature(dx < 0 ? 1 : -1); }}
+              style={{ position:'fixed', inset:0, zIndex:200, background:'rgba(0,0,0,0.92)',
+                backdropFilter:'blur(12px)', display:'flex', alignItems:'center', justifyContent:'center',
+                animation:'onboardFadeIn 0.25s ease-out' }}>
+              <div onClick={e => e.stopPropagation()}
+                style={{ position:'relative', width:'min(400px, 90vw)' }}>
+                {/* close */}
+                <button onClick={() => setSelectedCreature(null)}
+                  style={{ position:'absolute', top:-14, right:-14, zIndex:10,
+                    width:36, height:36, borderRadius:'50%', background:'rgba(149,211,195,0.12)',
+                    border:'1px solid rgba(149,211,195,0.3)', color:'var(--jade)',
+                    fontSize:16, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>✕</button>
+                {/* prev */}
+                <button onClick={e => { e.stopPropagation(); goCreature(-1); }}
+                  style={{ position:'absolute', left:-44, top:'35%', zIndex:10,
+                    width:36, height:36, borderRadius:'50%', background:'rgba(149,211,195,0.10)',
+                    border:'1px solid rgba(149,211,195,0.25)', color:'var(--jade)',
+                    fontSize:20, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>‹</button>
+                {/* next */}
+                <button onClick={e => { e.stopPropagation(); goCreature(1); }}
+                  style={{ position:'absolute', right:-44, top:'35%', zIndex:10,
+                    width:36, height:36, borderRadius:'50%', background:'rgba(149,211,195,0.10)',
+                    border:'1px solid rgba(149,211,195,0.25)', color:'var(--jade)',
+                    fontSize:20, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>›</button>
+                <div style={{ borderRadius:'2rem', overflow:'hidden', border:'1px solid rgba(149,211,195,0.2)',
+                  boxShadow:'0 32px 80px rgba(0,0,0,0.85)', marginBottom:20 }}>
+                  <img src={CREATURE_IMG[selectedCreature.code]} alt={selectedCreature.creature}
+                    style={{ width:'100%', display:'block', objectFit:'contain' }} />
+                </div>
+                <div style={{ textAlign:'center', padding:'0 4px' }}>
+                  <span style={{ fontSize:11, fontWeight:700, color:'var(--jade)',
+                    background:'rgba(149,211,195,0.12)', border:'1px solid rgba(149,211,195,0.2)',
+                    borderRadius:5, padding:'2px 10px', fontFamily:"'Noto Serif TC',serif",
+                    letterSpacing:'0.1em' }}>{selectedCreature.code}</span>
+                  <h3 style={{ fontSize:20, fontFamily:"'Noto Serif TC',serif", fontWeight:900,
+                    color:'var(--cream)', margin:'12px 0 6px' }}>{selectedCreature.name}</h3>
+                  <p style={{ fontSize:13, color:'var(--sand)', lineHeight:1.7,
+                    fontFamily:"'Noto Serif TC',serif", marginBottom:10 }}>{selectedCreature.description}</p>
+                  <p style={{ fontSize:13, color:'var(--mist)', lineHeight:1.8,
+                    fontFamily:"'Noto Serif TC',serif", fontStyle:'italic' }}>「{selectedCreature.insight}」</p>
+                  <p style={{ fontSize:11, color:'rgba(149,211,195,0.35)', marginTop:14,
+                    fontFamily:"'Noto Serif TC',serif", letterSpacing:'0.15em' }}>{encIdx + 1} / {encCreatures.length}</p>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    function RecordModal({ onClose, onSubmit, formData, setFormData, isLoading }) {
+      const setField = (field, value) => setFormData(prev => ({...prev, [field]: value}));
+      return (
+        <div className="fixed inset-0 z-[100] flex items-end md:items-center justify-center overflow-hidden p-0 md:p-12">
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
+          <div className="w-full md:max-w-5xl h-[94vh] md:h-auto md:max-h-[90vh] bg-paper rounded-t-[5px] md:rounded-[5px] relative z-10 flex flex-col shadow-2xl border-t-8 md:border-8 border-ink overflow-hidden sheet-up">
+            <div className="paper-texture" style={{opacity:0.03}} />
+            <div className="p-8 md:p-12 flex justify-between items-center border-b border-stroke shrink-0 bg-white/50 backdrop-blur-md relative z-10">
+              <div className="space-y-1"><h3 className="text-3xl font-serif font-black tracking-tighter text-ink">凝練食緒</h3><p className="text-[10px] font-black text-muted uppercase tracking-[0.3em]">CRAFTING DIETARY SPIRIT</p></div>
+              <button onClick={onClose} className="w-12 h-12 flex items-center justify-center bg-ink text-white rounded-full hover:scale-110 active:scale-90 transition-all shadow-lg"><XIcon size={24} /></button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-8 md:p-16 space-y-12 pb-64 md:pb-52 scrollbar-hide relative z-10">
+              <RecordSection title="這一餐吃了什麼？">
+                <input type="text" className="w-full rounded-[1.5rem] border-2 border-stroke bg-white px-6 py-4 text-lg font-semibold text-ink placeholder:text-[#B0A7A1] focus:outline-none focus:border-ink/30" placeholder="例如：牛肉麵、拿鐵、雞肉沙拉" value={formData.foodEmoji} onChange={e => setField('foodEmoji', e.target.value)} required />
+              </RecordSection>
+              <div className="grid md:grid-cols-2 gap-12 lg:gap-20">
+                <RecordSection title="餐別 · 週期"><PillSelector options={['早餐','午餐','晚餐','宵夜','點心']} value={formData.mealType} onChange={v => setField('mealType', v)} /></RecordSection>
+                <RecordSection title="食物類型 · 質地"><PillSelector options={[{label:'原型食物',value:'natural'},{label:'加工食品',value:'processed'},{label:'混合/外食',value:'mixed'}]} value={formData.foodType} onChange={v => setField('foodType', v)} /></RecordSection>
+              </div>
+              <div className="space-y-12 py-10 bg-parchment/30 rounded-[5px] px-8 md:px-12 border border-stroke/50 shadow-inner">
+                <RecordSection title="吃完這一餐後，你現在的心情是？"><PillSelector options={['被安撫','有精神','平靜','滿足','後悔','空虛','焦慮','煩躁']} value={formData.mood} onChange={v => setField('mood', v)} /></RecordSection>
+              </div>
+              <RecordSection title="身體感受 · 反饋">
+                <IconGrid options={[...BODY_FEELING_OPTIONS,{label:'其他',emoji:'✍️'}]} value={formData.bodyFeeling} onChange={v => setField('bodyFeeling', v)} />
+                <div className="mt-4 space-y-2">
+                  <p className="text-xs font-bold text-muted">其他補充（選「其他」時可填寫）</p>
+                  <textarea className="w-full rounded-2xl border border-stroke bg-white px-4 py-3 text-ink font-medium min-h-24 disabled:bg-parchment disabled:text-[#B0A7A1] focus:outline-none" placeholder="請描述你的身體感受..." value={formData.bodyFeelingOther} disabled={formData.bodyFeeling !== '其他'} onChange={e => setField('bodyFeelingOther', e.target.value)} />
+                </div>
+              </RecordSection>
+            </div>
+            <div className="p-6 md:p-12 bg-white/70 backdrop-blur-xl absolute bottom-0 left-0 right-0 border-t-2 border-stroke z-20 flex justify-center">
+              <div className="max-w-md w-full">
+                <button onClick={onSubmit} disabled={isLoading || !formData.foodEmoji.trim()} className="w-full bg-ink text-white py-5 md:py-7 rounded-[5px] font-black text-xl md:text-2xl shadow-2xl active:scale-[0.98] transition-all flex items-center justify-center gap-4 relative overflow-hidden disabled:opacity-50">
+                  <div className="absolute inset-0 paper-texture" style={{opacity:0.2}} />
+                  {isLoading ? <span className="spin-loading text-3xl">☯</span> : <span className="tracking-[0.4em]">開始凝練</span>}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function FortuneSlip({ fortune, onClose }) {
+      return (
+        <div className="w-full max-w-[320px] md:max-w-[400px] max-h-[88vh] bg-[#9e2a2b] shadow-2xl relative flex flex-col p-px overflow-hidden rounded-sm modal-up">
+          <div className="absolute inset-0 paper-texture" style={{opacity:0.3,mixBlendMode:'overlay'}} />
+          <div className="border border-white/20 m-3 md:m-4 p-4 md:p-6 flex flex-col items-center space-y-6 md:space-y-8 relative z-10 min-h-[460px] overflow-y-auto">
+            <div className="w-full h-px bg-white/30" />
+            <h3 className="text-white font-serif text-2xl md:text-3xl font-black tracking-[0.25em] mb-2" style={{writingMode:'vertical-rl'}}>{fortune.title}</h3>
+            <div className="w-full h-px bg-white/30" />
+            <div className="flex gap-2 md:gap-4 justify-center items-stretch flex-1 min-h-[180px] overflow-hidden">
+              {fortune.verse.map((line, idx) => <div key={idx} className="text-white/90 font-serif text-base md:text-lg tracking-[0.15em] leading-loose" style={{writingMode:'vertical-rl'}}>{line}</div>)}
+            </div>
+            <div className="w-full h-px bg-white/30" />
+            <div className="space-y-2 text-center w-full px-1">
+              {fortune.advice.map((adv, idx) => <p key={idx} className="text-[11px] md:text-xs text-white/80 font-serif leading-relaxed">{adv}</p>)}
+            </div>
+            <div className="w-full h-px bg-white/30" />
+            <button onClick={onClose} className="text-white/60 font-serif text-sm tracking-widest hover:text-white transition-colors pt-2">點擊收起</button>
+          </div>
+        </div>
+      );
+    }
+
+    function ResultModal({ record, onClose, totalRecords }) {
+      const type = MBEI_TYPES[record.mbeiCode];
+      const isUnlocked = totalRecords >= 10;
+      const fortune = useMemo(() => {
+        if (record.fortune) return record.fortune;
+        if (record.foodType !== 'natural' && ['心悸','胃脹','想睡'].includes(record.bodyFeeling)) return FORTUNES[4];
+        if (record.foodType === 'processed') return FORTUNES[0];
+        if (record.mood === '被安撫') return FORTUNES[2];
+        if (record.mood === '空虛') return FORTUNES[6];
+        if (record.foodType === 'natural' && record.mood === '平靜' && record.bodyFeeling === '清爽') return FORTUNES[1];
+        if (['獨處','聚餐'].includes(record.context)) return ['清爽','飽足'].includes(record.bodyFeeling) ? FORTUNES[5] : FORTUNES[3];
+        if (['趕工','報告週','失眠後'].includes(record.context)) return FORTUNES[7];
+        return FORTUNES[3];
+      }, [record]);
+
+      return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-8 overflow-hidden">
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-md" onClick={onClose} />
+          {!isUnlocked ? (
+            <FortuneSlip fortune={fortune} onClose={onClose} />
+          ) : (
+            <div className="w-full max-w-lg md:max-w-xl bg-white rounded-[5px] overflow-hidden relative shadow-2xl flex flex-col border-2 border-stroke modal-up">
+              <div className="paper-texture" style={{opacity:0.05}} />
+              <div className="bg-paper pt-16 pb-8 flex flex-col items-center gap-6 relative shrink-0">
+                <div className="absolute top-8 left-8 flex flex-col items-start gap-1"><span className="text-xs font-mono opacity-50">{record.date}</span><div className="seal text-sm">今日食緒</div></div>
+                <div className="absolute top-8 right-8"><button onClick={onClose} className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-md border border-stroke"><XIcon size={18} /></button></div>
+                <div style={{ width:128, height:160, borderRadius:5, overflow:'hidden', border:'4px solid #FAF8F5', boxShadow:'0 8px 32px rgba(0,0,0,0.15)', background:'var(--paper)' }}>
+                  <img src={CREATURE_IMG[record.mbeiCode]} alt={type.creature} style={{ width:'100%', height:'100%', objectFit:'contain', display:'block' }} />
+                </div>
+                <div className="text-center space-y-2 px-6">
+                  <p className="text-xs font-black text-muted uppercase tracking-[0.4em]">{record.mbeiCode}</p>
+                  <h3 className="text-3xl md:text-4xl font-serif font-black text-ink tracking-tighter">{type.name}</h3>
+                  <span className="bg-parchment px-3 py-1 rounded-full text-xs text-muted font-bold border border-stroke/50">{type.creature}</span>
+                </div>
+              </div>
+              <div className="flex-1 p-10 pt-4 space-y-8 relative z-10 overflow-y-auto scrollbar-hide">
+                <div className="space-y-6">
+                  <div className="flex items-center gap-4 justify-center text-xs font-black text-muted/60 uppercase tracking-widest">
+                    <span className="text-forest">餐後心情：{record.mood}</span><ChevronRightIcon size={12} /><span className="text-clay">{record.bodyFeeling}</span>
+                  </div>
+                  <div className="bg-parchment p-8 rounded-[5px] border border-stroke space-y-6 shadow-inner">
+                    <div className="flex gap-8">
+                      <div className="flex-1 space-y-2"><div className="flex items-center gap-2"><div className="w-1.5 h-3 bg-forest rounded-full" /><span className="text-[11px] font-black text-forest uppercase tracking-[0.2em]">宜行</span></div><p className="text-sm font-bold leading-relaxed text-ink">補水、慢食、靜心、深呼吸</p></div>
+                      <div className="flex-1 space-y-2"><div className="flex items-center gap-2"><div className="w-1.5 h-3 bg-clay rounded-full" /><span className="text-[11px] font-black text-clay uppercase tracking-[0.2em]">忌諱</span></div><p className="text-sm font-bold leading-relaxed text-ink">過量糖分、空腹咖啡、久坐不動</p></div>
+                    </div>
+                    <div className="h-px bg-stroke w-full opacity-50" />
+                    <p className="text-base md:text-lg font-serif leading-relaxed text-ink border-l-4 border-amber pl-6 py-1">「{type.insight}」</p>
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3 bg-white px-6 py-4 rounded-[5px] border border-stroke shadow-sm"><AwardIcon size={20} className="text-amber" /><span className="text-xs font-bold uppercase tracking-[0.2em] text-muted">成就解鎖：誠實記錄者</span></div>
+                  <button onClick={onClose} className="w-full py-6 text-ink font-black text-xs tracking-[0.4em] uppercase hover:opacity-100 opacity-60 transition-opacity">收納食緒曆卡</button>
+                </div>
+              </div>
+              <div className="h-3 w-full bg-clay shrink-0" />
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // ── Main App ──
+    function App() {
+      const [loginProfile, setLoginProfile] = useState(null);
+      const [activeTab, setActiveTab] = useState('home');
+      const [isRecordOpen, setIsRecordOpen] = useState(false);
+      const [isLoading, setIsLoading] = useState(false);
+      const [showResult, setShowResult] = useState(false);
+      const [latestRecord, setLatestRecord] = useState(null);
+      const [records, setRecords] = useState([
+        { id:'1', date:'2024-05-10', time:'08:30', mealType:'早餐', foodEmoji:'☕🥐', foodType:'mixed', mood:'有精神', bodyFeeling:'心悸', context:'趕工', mbeiCode:'MPLR' },
+        { id:'2', date:'2024-05-09', time:'12:30', mealType:'午餐', foodEmoji:'🥗🍱', foodType:'natural', mood:'平靜', bodyFeeling:'清爽', context:'獨處', mbeiCode:'PNLR' },
+      ]);
+      const [formData, setFormData] = useState({ mealType:'午餐', foodType:'mixed', mood:'平靜', bodyFeeling:'清爽', bodyFeelingOther:'', context:'獨處', foodEmoji:'' });
+
+      useEffect(() => {
+        const profiles = loadProfiles();
+        const activeEmail = localStorage.getItem(ACTIVE_USER_KEY);
+        if (!activeEmail) return;
+        const profile = profiles[normalizeEmail(activeEmail)];
+        if (profile) setLoginProfile(profile);
+      }, []);
+
+      const handleLogin = (profile) => {
+        const normalized = normalizeEmail(profile.email);
+        const profiles = loadProfiles();
+        profiles[normalized] = profile;
+        saveProfiles(profiles);
+        localStorage.setItem(ACTIVE_USER_KEY, normalized);
+        setLoginProfile(profile);
+      };
+
+      const handleLogout = () => { localStorage.removeItem(ACTIVE_USER_KEY); setLoginProfile(null); };
+
+      const determineMBEI = (data) => {
+        let mbei = '';
+        mbei += ['焦慮','煩躁','空虛','被安撫'].includes(data.mood) ? 'M' : 'P';
+        mbei += data.foodType === 'natural' ? 'N' : 'P';
+        mbei += ['胃脹','昏沉','心悸','口渴'].includes(data.bodyFeeling) ? 'H' : 'L';
+        mbei += ['趕工','失眠後','報告週'].includes(data.context) ? 'V' : 'R';
+        return (mbei.length === 4 ? mbei : 'MPLR');
+      };
+
+      const handleRecord = async () => {
+        if (!formData.foodEmoji.trim()) return;
+        setIsLoading(true);
+        const aiFortune = await generateAIFortune({...formData, foodEmoji: formData.foodEmoji.trim()});
+        setTimeout(() => {
+          const newRecord = {
+            id: Date.now().toString(),
+            date: new Date().toISOString().split('T')[0],
+            time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}),
+            ...formData,
+            bodyFeeling: formData.bodyFeeling === '其他' && formData.bodyFeelingOther.trim() ? `其他：${formData.bodyFeelingOther.trim()}` : formData.bodyFeeling,
+            mbeiCode: determineMBEI(formData),
+            fortune: aiFortune || undefined,
+          };
+          setRecords(prev => [newRecord, ...prev]);
+          setLatestRecord(newRecord);
+          setIsLoading(false);
+          setIsRecordOpen(false);
+          setShowResult(true);
+        }, 800);
+      };
+
+      if (!loginProfile) return <LoginGate onLogin={handleLogin} />;
+
+      return (
+        <div style={{ height:'100vh', background:'var(--night)', display:'flex', overflow:'hidden', position:'relative', fontFamily:"'Noto Serif TC', serif" }}>
+          {/* 側欄（桌面） */}
+          <aside style={{ display:'none', flexDirection:'column', width:280, height:'100vh', background:'rgba(15,9,0,0.92)',
+            borderRight:'1px solid rgba(149,211,195,0.12)', zIndex:50, flexShrink:0, position:'relative' }}
+            className="md:flex">
+            <div style={{ display:'flex', flexDirection:'column', height:'100%', padding:32, overflowY:'auto' }}>
+              {/* Logo */}
+              <div style={{ marginBottom:40 }}>
+                <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:4 }}>
+                  <div style={{ width:4, height:24, background:'var(--jade)', borderRadius:2 }} />
+                  <h1 style={{ fontSize:22, fontFamily:"'Noto Serif TC', serif", fontWeight:900, color:'var(--jade)', letterSpacing:'0.15em', margin:0 }}>食緒曆</h1>
+                </div>
+                <p style={{ fontSize:13, color:'var(--mist)', letterSpacing:'0.1em', marginLeft:12, fontWeight:500 }}>飲食覺察日誌</p>
+              </div>
+              {/* 導覽 */}
+              <div style={{ flex:1, display:'flex', flexDirection:'column', gap:4 }}>
+                {['今日日誌|home','食緒曆卡|almanac','深度洞察|insight','修身個人|profile'].map(item => {
+                  const [label, tab] = item.split('|');
+                  const active = activeTab === tab;
+                  return (
+                    <button key={tab} onClick={() => setActiveTab(tab)}
+                      style={{ width:'100%', display:'flex', alignItems:'center', padding:'12px 16px', borderRadius:10,
+                        background: active ? 'rgba(149,211,195,0.1)' : 'transparent',
+                        border: active ? '1px solid rgba(149,211,195,0.2)' : '1px solid transparent',
+                        color: active ? 'var(--jade)' : 'var(--sand)',
+                        fontFamily:"'Noto Serif TC', serif", fontSize:15, fontWeight: active ? 700 : 400,
+                        cursor:'pointer', letterSpacing:'0.05em', textAlign:'left' }}>
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
+              {/* 記錄按鈕 */}
+              <button onClick={() => setIsRecordOpen(true)}
+                style={{ width:'100%', background:'var(--crimson)', border:'2px solid rgba(255,180,160,0.2)', borderRadius:12,
+                  padding:'14px 0', color:'var(--blush)', fontSize:14, fontWeight:800, fontFamily:"'Noto Serif TC', serif",
+                  letterSpacing:'0.15em', cursor:'pointer',
+                  boxShadow:'0 0 0 4px rgba(133,41,27,0.12), 0 8px 24px rgba(133,41,27,0.4)' }}
+                className="wax-seal-active">
+                ＋ 凝練食緒
+              </button>
+            </div>
+          </aside>
+
+          <div style={{ flex:1, display:'flex', flexDirection:'column', height:'100vh', overflow:'hidden' }}>
+            {/* 手機頂欄 */}
+            <header style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'16px 20px',
+              background:'rgba(15,9,0,0.95)', borderBottom:'1px solid rgba(149,211,195,0.12)', zIndex:40 }}
+              className="md:hidden">
+              <h1 style={{ fontSize:18, fontFamily:"'Noto Serif TC', serif", fontWeight:900, color:'var(--jade)', letterSpacing:'0.2em', margin:0 }}>食緒曆</h1>
+              <button onClick={() => setActiveTab('profile')}
+                style={{ width:32, height:32, borderRadius:'50%', background:'rgba(149,211,195,0.08)',
+                  border:'1px solid rgba(149,211,195,0.2)', display:'flex', alignItems:'center', justifyContent:'center',
+                  color:'var(--jade)', cursor:'pointer' }}>
+                <UserIcon size={16} />
+              </button>
+            </header>
+
+            <main style={{ flex:1, overflowY:'auto', position:'relative', zIndex:10, paddingBottom:120 }}
+              className="scrollbar-hide md:pb-24">
+              <div style={{ maxWidth:960, margin:'0 auto', padding:'32px 20px' }} className="md:p-12">
+                {activeTab === 'home' && <HomeView records={records} />}
+                {activeTab === 'almanac' && <AlmanacView records={records} />}
+                {activeTab === 'insight' && <InsightView />}
+                {activeTab === 'profile' && <ProfileView records={records} loginProfile={loginProfile} onLogout={handleLogout} />}
+              </div>
+            </main>
+
+            {/* 手機底欄 */}
+            <nav style={{ position:'fixed', bottom:0, left:0, right:0,
+              background:'rgba(15,9,0,0.95)', borderRadius:'3px 3px 0 0', padding:'8px 12px 20px',
+              display:'flex', alignItems:'center', justifyContent:'space-around',
+              zIndex:40, borderTop:'1px solid rgba(149,211,195,0.15)',
+              boxShadow:'0 -4px 24px rgba(0,0,0,0.4)' }}
+              className="md:hidden">
+              {['今日|home','曆卡|almanac', null, '洞察|insight','修身|profile'].map((item, i) => {
+                if (!item) return (
+                  <button key="record" onClick={() => setIsRecordOpen(true)}
+                    style={{ width:52, height:40, background:'var(--crimson)', borderRadius:8,
+                      border:'2px solid rgba(255,180,160,0.25)', display:'flex', alignItems:'center', justifyContent:'center',
+                      color:'var(--blush)', fontSize:22, cursor:'pointer', flexShrink:0,
+                      boxShadow:'0 4px 20px rgba(133,41,27,0.6)' }}>+</button>
+                );
+                const [label, tab] = item.split('|');
+                return (
+                  <button key={tab} onClick={() => setActiveTab(tab)}
+                    style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:2, background:'none', border:'none', cursor:'pointer',
+                      color: activeTab===tab ? 'var(--jade)' : 'var(--sand)', fontFamily:"'Noto Serif TC', serif", fontSize:13, fontWeight:600, flex:1 }}>
+                    <span>{label}</span>
+                  </button>
+                );
+              })}
+            </nav>
+
+            {isRecordOpen && <RecordModal onClose={() => setIsRecordOpen(false)} onSubmit={handleRecord} formData={formData} setFormData={setFormData} isLoading={isLoading} />}
+            {showResult && latestRecord && <ResultModal record={latestRecord} onClose={() => setShowResult(false)} totalRecords={records.length} />}
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>

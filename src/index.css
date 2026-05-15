@@ -1,0 +1,37 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Serif+TC:wght@400;700;900&family=JetBrains+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", "Noto Sans TC", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Noto Serif TC", serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  
+  --shadow-card: 0 8px 30px rgba(135, 123, 115, 0.08);
+}
+
+@layer base {
+  body {
+    @apply bg-[#EAE4D9] text-[#2C2623];
+  }
+}
+
+.paper-texture {
+  background-image: radial-gradient(#877B73 0.5px, transparent 0.5px);
+  background-size: 24px 24px;
+  opacity: 0.05;
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.seal {
+  @apply inline-block border-2 border-[#C04A3B] text-[#C04A3B] px-1 py-0.5 text-[10px] font-black -rotate-8 ml-2 rounded-sm font-serif uppercase tracking-tighter;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
