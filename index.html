@@ -20,10 +20,10 @@
             sand:      '#c8b88a',
             amber:     '#D98A5B',
             forest:    '#4A6B5D',
-            muted:     '#877B73',
-            parchment: '#F4EFE6',
-            stroke:    '#EAE4D9',
-            paper:     '#FAF8F5',
+            muted:     '#c8b88a',
+            parchment: '#201d12',
+            stroke:    '#3a3020',
+            paper:     '#252016',
             night:     '#1b1200',
             cream:     '#f5e0bb',
             mist:      '#a8c5bf',
@@ -49,10 +49,10 @@
       --sand:     #c8b88a;
       --amber:    #D98A5B;
       --forest:   #4A6B5D;
-      --muted:    #877B73;
-      --parchment:#F4EFE6;
-      --stroke:   #EAE4D9;
-      --paper:    #FAF8F5;
+      --muted:    #c8b88a;
+      --parchment:#201d12;
+      --stroke:   #3a3020;
+      --paper:    #252016;
       --night:    #1b1200;
       --cream:    #f5e0bb;
       --mist:     #a8c5bf;
@@ -86,6 +86,9 @@
     }
     .scrollbar-hide::-webkit-scrollbar { display: none; }
     .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+    /* Dark-theme overrides: force white/light utility classes to dark equivalents */
+    .bg-white { background-color: #252016 !important; }
+    .text-ink  { color: #f5e0bb !important; }
     @keyframes spin { to { transform: rotate(360deg); } }
     .spin-slow { animation: spin 15s linear infinite; border-top: 4px solid var(--clay); border-radius: 9999px; position: absolute; inset: 0; opacity: 0.6; }
     .spin-loading { animation: spin 2s linear infinite; display: inline-block; }

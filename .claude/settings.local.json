@@ -17,7 +17,16 @@
       "Bash(powershell -command 'Add-Type -AssemblyName System.Drawing; $img = [System.Drawing.Image]::FromFile\\('\\\\''C:/00_me/01_School/01.Master/一下/Data enable/2026.0515_foodmood-app-main/onboarding_v2_hq.jpg'\\\\''\\); Write-Host $img.Width x $img.Height; $img.Dispose\\(\\)')",
       "PowerShell(Add-Type -AssemblyName System.Drawing; $img = [System.Drawing.Image]::FromFile\\('C:\\\\00_me\\\\01_School\\\\01.Master\\\\一下\\\\Data enable\\\\2026.0515_foodmood-app-main\\\\onboarding_v2.jpg'\\); Write-Host \"$\\($img.Width\\) x $\\($img.Height\\)\"; $img.Dispose\\(\\))",
       "PowerShell(Move-Item -Path \"C:\\\\00_me\\\\01_School\\\\01.Master\\\\�@�U\\\\Data enable\\\\2026.0515_foodmood-app-main\\\\foodmood.html\" -Destination \"C:\\\\00_me\\\\01_School\\\\01.Master\\\\�@�U\\\\Data enable\\\\2026.0515_foodmood-app-main\\\\index.html\" -Force)",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(spectra status *)",
+      "Bash(spectra list *)",
+      "Bash(spectra unpark *)",
+      "Bash(spectra in-progress *)",
+      "Bash(spectra instructions *)",
+      "Bash(spectra task *)",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\('locale:', d.get\\('locale','none'\\)\\)\")",
+      "Bash(spectra new *)",
+      "Bash(spectra analyze *)"
     ]
   }
 }
