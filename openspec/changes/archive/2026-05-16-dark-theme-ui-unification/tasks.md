@@ -65,3 +65,13 @@
 ## 10. 棄用 Vite/npm 版本清理
 
 - [x] 10.1 刪除棄用的 Vite/npm 版本殘留：移除 `src/`（整個 Vite React 目錄）、`api/`（未使用的後端 serverless 函式）、`vite.config.ts`、`tsconfig.json`、`package.json`、`package-lock.json`、`.vite/`（Vite 快取）。驗證：專案根目錄僅剩 `index.html`、圖片資源、`openspec/`、`.claude/`、`.gitignore`、`.spectra.yaml`、`CLAUDE.md`、`README.md`、`metadata.json`。
+
+## 11. 洞察頁型格卡片動態化
+
+- [x] 11.1 將 `InsightView` function 改為接收 `records` props（原為無 props），並以 `React.useMemo` 計算過去 7 天紀錄中 `mbeiCode` 出現頻率最高的型格（`weekType`）；無紀錄時 fallback 為 `MPLR`。在呼叫端（`App` component 第 `activeTab === 'insight'` 判斷處）改為 `<InsightView records={records} />`。驗證：洞察頁「本週最常出現型格」區塊的 code 與 creature 名稱，與實際 records 中最常出現的 mbeiCode 對應的 `MBEI_TYPES` 條目一致。
+
+- [x] 11.2 將「本週最常出現型格」卡片的 emoji icon（硬編碼 🦊）改為使用 `CREATURE_IMG[weekType.code]` 的 PNG 圖片：以 `<img src={CREATURE_IMG[weekType.code]} alt={weekType.creature} className="w-full h-full object-cover" />` 取代 `{weekType.emoji}` 文字，外層 div 加 `overflow-hidden` 並移除 `text-5xl`。驗證：型格卡片顯示 `openspec/asset/png/` 下對應的 PNG 圖片，圖片與名稱與圖鑑 16 型完全呼應。
+
+## 12. Modal 深色半透明修正
+
+- [x] 12.1 將 `RecordModal` header 的 `bg-white/50 backdrop-blur-md` 改為 `bg-parchment/80 backdrop-blur-md`，底部送出區的 `bg-white/70 backdrop-blur-xl` 改為 `bg-parchment/90 backdrop-blur-xl`。驗證：開啟「凝練食緒」Modal，header 與底部送出按鈕區呈深褐黑半透明，視覺風格與整體深色主題一致。
