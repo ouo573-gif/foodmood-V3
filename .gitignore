@@ -3,3 +3,6 @@ openspec/.vector-search.db*
 node_modules/
 dist/
 .env
+
+# Claude Code local permissions may contain secrets
+.claude/settings.local.json
